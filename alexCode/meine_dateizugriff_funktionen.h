@@ -46,7 +46,7 @@ int oeffnenundanhaengen(char eingabe[], FILE *datei, int c){
     }
 }
 
-int oeffnenundanzeigen(char eingabe[], FILE *datei, int c){
+int oeffnenundanzeigen(char eingabe[], FILE **datei, int c){
 
     int i=0;
 
@@ -54,11 +54,11 @@ int oeffnenundanzeigen(char eingabe[], FILE *datei, int c){
 
     if(datei!=NULL){
 
-        while((c=fgetc(datei))!=EOF || i<3){
+        while(((c=fgetc(datei))!=EOF) && i < 3){
 
             putchar(c);
 
-            if((c=fgetc(datei))=='\n'){
+            if(c==10){
 
                 i++;
             }
