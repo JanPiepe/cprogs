@@ -13,6 +13,7 @@ typedef enum
 {
     READ = 0,
     WRITE = 1,
+    OVERWRITE = 2,
 }Mode;
 
 typedef struct JFP_Line
@@ -29,10 +30,10 @@ void closeFile(FILE** file); // Closes reports.txt
 void loadReports(FILE** file, jfp_line** firstElem, jfp_line** lastElem);
 void initList(jfp_line** lastElem);
 
-char* readConsoleInput(char* input, __u_int* input_n, bool allLowerCase);
-char getUserOption(char* input, __u_int* input_n);
+void readConsoleInput(char* input, __u_int* input_n, bool allLowerCase);
+char getUserOption();
 
-void execOption(FILE** file, jfp_line** firstElem, char option);
+void execOption(FILE** file, jfp_line** firstElem, jfp_line** lastElem, char option);
 void showAllReports(jfp_line** firstElem);
-void addReport();
-void saveReports();
+void addReport(FILE** file, jfp_line** lastElem);
+void saveReports(FILE** file, jfp_line** firstElem);

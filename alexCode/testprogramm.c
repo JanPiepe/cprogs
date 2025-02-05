@@ -28,12 +28,12 @@ int main(){
 
     if(auswahl=='r'){
 
-        erzeugenundfuellen(textfile, &datei, c);
+        erzeugenundfuellen(textfile, datei, c);
     }
 
     else if(auswahl=='a'){
 
-        oeffnenundanhaengen(textfile, &datei, c);
+        oeffnenundanhaengen(textfile, datei, c);
     }
 
     else if(auswahl=='z'){

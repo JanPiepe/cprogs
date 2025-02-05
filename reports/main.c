@@ -8,10 +8,6 @@ int main ()
     jfp_line* firstElem = NULL;
     jfp_line* lastElem = NULL;
 
-    char* input[1024] = {};
-    __u_int input_n; // from stddef.h, short form of unsigned int
-    input_n = 4;
-
     char option = 0; // we using char as an 8bit int
     bool fileExist;
 
@@ -28,8 +24,8 @@ int main ()
     }
 
     printf("Choose an Option: (A)dd, (S)how, (E)xit\n");
-    option = getUserOption((char*)input, &input_n);
+    option = getUserOption();
 
-    execOption(&file, &firstElem, option);
+    execOption(&file, &firstElem, &lastElem, option);
     return 0;
 }

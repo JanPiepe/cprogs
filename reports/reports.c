@@ -105,7 +105,7 @@ void initList(jfp_line** lastElem)
     }
 }
 
-char* readConsoleInput(char* input, __u_int* input_n, bool allLowerCase)
+void readConsoleInput(char* input, __u_int* input_n, bool allLowerCase)
 {
     char c;
     __u_int i = 0;
@@ -146,46 +146,48 @@ char* readConsoleInput(char* input, __u_int* input_n, bool allLowerCase)
     }
 
     *input_n = i;
-    return input;
 }
 
-char getUserOption(char* input, __u_int* input_n)
+char getUserOption()
 {
     char option = 0x0;
 
-    input = readConsoleInput(input, input_n, true);
+    char* input[1024] = {};
+    __u_int input_n; // from stddef.h, short form of unsigned int
+
+    readConsoleInput((char*)input, &input_n, true);
     puts(""); // Adding an empty line for visual clearity
 
-    if(*input_n == 2) // input_n also includes NULL as string end
+    if(input_n == 2) // input_n also includes NULL as string end
     {
-        if(input[0] == 's')
+        if(input[0] == (char*)'s')
         {
             option = 1;
             return option;
         }
-        if(input[0] == 'a')
+        if(input[0] == (char*)'a')
         {
             option = 2;
             return option;
         }
-        if(input[0] == 'e')
+        if(input[0] == (char*)'e')
         {
             option = 3;
             return option;
         }
     }else
     {
-        if(strcmp(input, "show") == 0)
+        if(strcmp((char*)input, "show") == 0)
         {
             option = 1;
             return option;
         }
-        if(strcmp(input, "add") == 0)
+        if(strcmp((char*)input, "add") == 0)
         {
             option = 2;
             return option;
         }
-        if(strcmp(input, "exit") == 0)
+        if(strcmp((char*)input, "exit") == 0)
         {
             option = 3;
             return option;
@@ -194,7 +196,7 @@ char getUserOption(char* input, __u_int* input_n)
     return option;
 }
 
-void execOption(FILE** file, jfp_line** firstElem, char option)
+void execOption(FILE** file, jfp_line** firstElem, jfp_line** lastElem, char option)
 {
     switch (option)
     {
@@ -202,10 +204,10 @@ void execOption(FILE** file, jfp_line** firstElem, char option)
         showAllReports(firstElem);
         break;
     case 2:
-        addReport();
+        addReport(file, lastElem);
         break;
     case 3:
-        saveReports();
+        saveReports(file, firstElem);
         break;
 
     default:
@@ -216,8 +218,8 @@ void execOption(FILE** file, jfp_line** firstElem, char option)
 
 void showAllReports(jfp_line** firstElem)
 {
-    jfp_line *curLine = *firstElem;
-    jfp_line *nextLine;
+    jfp_line* curLine = *firstElem;
+    jfp_line* nextLine;
 
     while(1)
     {
@@ -234,10 +236,25 @@ void showAllReports(jfp_line** firstElem)
     }
 }
 
-void addReport()
+void addReport(FILE** file, jfp_line** endElem)
 {
+    jfp_line* lastLine = *endElem;
+    jfp_line* newLastLine;
+    char input[1024] = {};
+
+
+    readConsoleInput(&input, NULL, false);
+
+    newLastLine = ((jfp_line*) malloc(sizeof(jfp_line)));
+    strcpy(newLastLine->_eingabe, input);
+    newLastLine->prevLine = lastLine;
+    newLastLine->nextLine = NULL;
+    newLastLine->lineID = lastLine->lineID + 1;
+
+    lastLine->nextLine = newLastLine;
+    lastLine = newLastLine;
 }
 
-void saveReports()
+void saveReports(FILE** file, jfp_line** firstElem)
 {
 }

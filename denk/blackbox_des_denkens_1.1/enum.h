@@ -1,0 +1,1 @@
+typedef enum satzbauteil{SUBJEKT, PRAEDIKAT, ADVERB, OBJEKT }sbt;

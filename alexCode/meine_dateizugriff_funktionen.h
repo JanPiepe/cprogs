@@ -50,11 +50,11 @@ int oeffnenundanzeigen(char eingabe[], FILE **datei, int c){
 
     int i=0;
 
-    datei=fopen(eingabe,"r");
+    *datei=fopen(eingabe,"r");
 
     if(datei!=NULL){
 
-        while(((c=fgetc(datei))!=EOF) && i < 3){
+        while(((c=fgetc(*datei))!=EOF) && i < 3){
 
             putchar(c);
 
