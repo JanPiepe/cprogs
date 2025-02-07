@@ -10,34 +10,43 @@
 #define DATABASE "lieblingsKfz"
 #define TABLE "pkw"
 
+// Max length of the username and password, should be reseonable, since it takes up memory.
+#define MAX_USR_LEN 10
+#define MAX_PWD_LEN 20
+
 typedef struct Login_info
 {
     bool usesLogin;  // if true we ask for login info, if false we use the default login info.
     bool isLoggedIn; // if true we are logged in. And more options are available.
-    char username[256];
-    char password[256];
+    char username[MAX_USR_LEN];
+    char password[MAX_PWD_LEN];
 } login_info;
 
-void finish_with_error(MYSQL *con)
-{
-    fprintf(stderr, "%s\n", mysql_error(con));
-    mysql_close(con);
-    exit(1);
-}
 
-void endProgram(MYSQL *con, login_info *login_info)
+void endProgram(MYSQL *con, login_info *login_info, bool error)
 {
     free(login_info);
     mysql_close(con);
+
+    if(error)
+        exit(1);
+
     exit(0);
+}
+
+void finish_with_error(MYSQL *con, login_info *login_info)
+{
+    fprintf(stderr, "%s\n", mysql_error(con));
+    endProgram(con, NULL, true);
 }
 
 void dbContact(MYSQL **con, login_info **login_info)
 {
+    // We check if MYSQL Struct is actually available to be accessed.
     if (con == NULL)
     {
         fprintf(stderr, "mysql_init() failed\n");
-        endProgram(*con, *login_info);
+        endProgram(*con, *login_info, true);
     }
 
     // Login with the given login info.
@@ -45,14 +54,14 @@ void dbContact(MYSQL **con, login_info **login_info)
     {
         if (mysql_real_connect(*con, LOCALHOST, (*login_info)->username, (*login_info)->password, DATABASE, 0, NULL, 0) == NULL)
         {
-            finish_with_error(*con);
+            finish_with_error(*con, *login_info);
         }
     }
     else // Login with default login info. For lazy devs.
     {
         if (mysql_real_connect(*con, LOCALHOST, USER, PASSWORD, DATABASE, 0, NULL, 0) == NULL)
         {
-            finish_with_error(*con);
+            finish_with_error(*con, *login_info);
         }
     }
 }
@@ -93,8 +102,9 @@ void add_row(char *table, MYSQL *con)
     // Execute the query
     if (mysql_query(con, query))
     {
-        // If the query fails, print the error and exit
-        finish_with_error(con);
+        finish_with_error(con, NULL);
+        // TODO: We dont have access to login_info here. Passing as parameter is a bit ugly.
+        // TODO: Maybe return add a bool as return value and if false, we end the program. From Main() which has all infos.
     }
 
     // Print success message
@@ -113,8 +123,9 @@ void read_all_rows(char *table, MYSQL *con)
     // Execute the query
     if (mysql_query(con, query))
     {
-        // If the query fails, print the error and exit
-        finish_with_error(con);
+        finish_with_error(con, NULL);
+        // TODO: We dont have access to login_info here. Passing as parameter is a bit ugly.
+        // TODO: Maybe return add a bool as return value and if false, we end the program. From Main() which has all infos.
     }
 
     // Store the result of the query
@@ -122,7 +133,10 @@ void read_all_rows(char *table, MYSQL *con)
 
     if (result == NULL)
     {
-        finish_with_error(con);
+
+        finish_with_error(con, NULL);
+        // TODO: We dont have access to login_info here. Passing as parameter is a bit ugly.
+        // TODO: Maybe return add a bool as return value and if false, we end the program. From Main() which has all infos.
     }
 
     // Get the number of fields in the result
@@ -161,8 +175,9 @@ void read_all_tables(MYSQL *con)
     // Execute the query
     if (mysql_query(con, query))
     {
-        // If the query fails, print the error and exit
-        finish_with_error(con);
+        finish_with_error(con, NULL);
+        // TODO: We dont have access to login_info here. Passing as parameter is a bit ugly
+        // TODO: Maybe return add a bool as return value and if false, we end the program. From Main() which has all infos
     }
 
     // Store the result of the query
@@ -170,7 +185,9 @@ void read_all_tables(MYSQL *con)
 
     if (result == NULL)
     {
-        finish_with_error(con);
+        finish_with_error(con, NULL);
+        // TODO: We dont have access to login_info here. Passing as parameter is a bit ugly
+        // TODO: Maybe return add a bool as return value and if false, we end the program. From Main() which has all infos
     }
 
     // Print the tables
@@ -186,25 +203,28 @@ void read_all_tables(MYSQL *con)
 
 void login(login_info **login_info)
 {
-    char username[256] = {'\0'};
-    char password[256] = {'\0'};
+    char username[MAX_USR_LEN] = {'\0'};
+    char password[MAX_PWD_LEN] = {'\0'};
 
     printf("Enter username: ");
+    // TODO: Add a check for the length of the username
     fgets(username, sizeof(username), stdin);
     username[strcspn(username, "\n")] = '\0'; // Remove newline character
 
     // Lazy Dev Login; Sercurity risk!
-    // This will skip the mannual login.
+    // This will skip the mannual login
     if(strcmp(username, "aldi") == 0)
     {
         printf("Logged in as Aldi\n");
-        // will use the default login, saved in the defines.
-        (*login_info)->usesLogin = false;
+        // will use the default login, saved in the defines
+        (*login_info)->usesLogin  = false;
         (*login_info)->isLoggedIn = true;
         return;
     }
 
     printf("Enter password: ");
+    // TODO: Add a check for the length of the password
+    // TODO: Hide the password input
     fgets(password, sizeof(password), stdin);
     password[strcspn(password, "\n")] = '\0'; // Remove newline character
 
@@ -213,8 +233,10 @@ void login(login_info **login_info)
     strncpy((*login_info)->password, password, sizeof((*login_info)->password));
 
     // Set usesLogin to true
-    (*login_info)->usesLogin = true;
+    (*login_info)->usesLogin  = true;
     (*login_info)->isLoggedIn = true;
+
+    // TODO: Add an option to input the database, and save the choice in the login_info struct.
 }
 
 int main()
@@ -228,19 +250,21 @@ int main()
     login_info *login_info = malloc(sizeof(login_info));
 
     // Initialize MySQL connection
+    // TODO: Add con to the heap as well??
     MYSQL *con = mysql_init(NULL);
 
     while(true)
     {
         printf("Choose an option:\n");
-        printf("1. Log Into Database\n");
+        printf("1. Log Into Database\n"); // TODO: Let them choose the Database
 
         // If the user is logged in, show additional options
         if(login_info->isLoggedIn)
         {
             printf("2. Add a row\n");
             printf("3. Read all rows\n");
-            printf("4. Read all tables\n");
+            printf("4. Add a table\n");
+            printf("5. Read all tables\n");
         }
         printf("9. Exit\n");
         printf("Enter your choice: ");
@@ -250,26 +274,34 @@ int main()
 
         switch (choice)
         {
-        case 1:
+        case 1: // Login
             login(&login_info);
             // Connect to the database
             dbContact(&con, &login_info);
             break;
-        case 2:
+        case 2: // Add a row
             if(login_info->isLoggedIn)
-                add_row(TABLE, con);
+                add_row(TABLE, con); // TODO: Add option to choose table, requires a diffrent handling.
             break;
-        case 3:
+        case 3: // Show all rows
             if(login_info->isLoggedIn)
-                read_all_rows(TABLE, con);
+                read_all_rows(TABLE, con); // TODO: Add option to choose table, requires a diffrent handling.
             break;
-        case 4:
+        case 4: // Add a table
+            if(login_info->isLoggedIn)
+                // TODO: add_table() function
+            break;
+        case 5: // Show all tables
             if(login_info->isLoggedIn)
                 read_all_tables(con);
             break;
+        case 6: // Change Table
+            if(login_info->isLoggedIn)
+                // TODO: change_table() function
+            break;
         case 9:
             printf("Closing Client\n");
-            endProgram(con, login_info);
+            endProgram(con, login_info, false);
         default:
             printf("Invalid choice!\n");
             break;
@@ -277,6 +309,7 @@ int main()
     }
 
     // Free the login_info struct and close the MySQL connection
+    // This should never be reached
     free(login_info);
     mysql_close(con);
     return 0;
